@@ -1,0 +1,47 @@
+version: "3"
+services:
+  core-app:
+    container_name: core-app
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_HTTPS_PORT=443
+      - ASPNETCORE_HTTPS_PORT=1337
+      - ASPNETCORE_URLS=https://+;http://+
+    build: .
+    depends_on:
+      - ddns-updater
+    ports:
+      - "1337:1337"
+      - "80:80"
+      - "443:443"
+  
+  ddns-updater:
+    image: qmcgaw/ddns-updater
+    container_name: ddns-updater
+    ports:
+      - 8000:8000/tcp
+    volumes:
+      - ./data:/updater/data
+    environment:
+      - CONFIG=
+      - PERIOD=5m
+      - IP_METHOD=cycle
+      - IPV4_METHOD=cycle
+      - IPV6_METHOD=cycle
+      - HTTP_TIMEOUT=10s
+  
+      # Web UI
+      - LISTENING_PORT=8000
+      - ROOT_URL=/
+  
+      # Backup
+      - BACKUP_PERIOD=0 # 0 to disable
+      - BACKUP_DIRECTORY=/updater/data
+  
+      # Other
+      - LOG_ENCODING=console
+      - LOG_LEVEL=info
+      - NODE_ID=-1 # -1 to disable
+      - GOTIFY_URL=
+      - GOTIFY_TOKEN=
+    restart: always
